@@ -56,7 +56,7 @@ public class ConcurrentRiskLimitValidator {
                 .createPersistedTo(new File("ingress/map/fx-risk-map.dat"));
     }
 
-    private final long packInstrument(CharSequence s) {
+    public static long packInstrument(CharSequence s) {
         long result = 0;
         int len = Math.min(s.length(), 8);
         for(int i = 0; i < 8; i++) {
@@ -110,14 +110,14 @@ public class ConcurrentRiskLimitValidator {
                     return true;
                 } else return false;
             }
-            return initializeAndValidateNewInstrument(context, instrumentHash, tradeSize, maxLimit);
+            return initializeAndValidateNewInstrument(context, tradeSize, maxLimit);
         }
 
 
 
     }
 
-    private boolean initializeAndValidateNewInstrument(ExternalMapQueryContext<LongValue, LongValue, ?> context, long instrumentHash, long tradeSize, long maxLimit) {
+    private boolean initializeAndValidateNewInstrument(ExternalMapQueryContext<LongValue, LongValue, ?> context, long tradeSize, long maxLimit) {
         if(tradeSize <= maxLimit) {
 
             LongValue insertionFlyweight = threadLocalInsertionValueFlyweight.get();
