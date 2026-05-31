@@ -39,3 +39,5 @@ build/
 .DS_Store
 /ingress/queue/
 /ingress/map/
+/ingress/queue
+/ingress/map
