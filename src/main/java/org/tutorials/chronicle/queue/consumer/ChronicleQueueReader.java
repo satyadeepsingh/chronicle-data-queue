@@ -5,7 +5,6 @@ import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
-import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.values.Values;
 import net.openhft.chronicle.wire.DocumentContext;
 
@@ -13,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class PricingAndRiskEngine {
+public class ChronicleQueueReader {
 
     public static ChronicleMap<LongValue, LongValue> riskMap;
     private static final LongValue searchKeyFlyweight = Values.newNativeReference(LongValue.class);

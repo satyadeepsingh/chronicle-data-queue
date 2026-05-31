@@ -7,7 +7,7 @@ import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.values.Values;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.tutorials.chronicle.queue.consumer.PricingAndRiskEngine;
+import org.tutorials.chronicle.queue.consumer.ChronicleQueueReader;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class PricingAndRiskEngineTest {
+public class ChronicleQueueReaderTest {
 
     // Clean up the persisted map file before each test run
     @BeforeEach
@@ -54,7 +54,7 @@ public class PricingAndRiskEngineTest {
         // 2. RUN the PricingAndRiskEngine in a background thread
         Thread engineThread = new Thread(() -> {
             try {
-                PricingAndRiskEngine.main(new String[]{});
+                ChronicleQueueReader.main(new String[]{});
             } catch (Exception e) {
                 // This will be noisy on shutdown, can be ignored
             }
