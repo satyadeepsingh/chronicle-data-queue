@@ -27,13 +27,13 @@ public class ConcurrentRiskLimitValidator {
      * A Heap Flyweight (newHeapInstance) is a Bucket.
      * It physically exists inside the JVM heap and holds 8 bytes of actual memory.
      * A Native Flyweight (newNativeReference) is a Telescope.
-     * It holds zero memory itself; it just points at memory that exists outside the JVM (in /dev/shm).
-     * When you are updating an existing client's risk limit, that data already exists in /dev/shm.
+     * It holds zero memory itself; it just points at memory that exists outside the JVM (in /ingress/map/fx-risk-map).
+     * When you are updating an existing client's risk limit, that data already exists in /ingress/map/fx-risk-map.
      * If you aim the Native "Telescope" at it, you are looking directly at the live data.
      * If you used a Heap Flyweight for updates, your execution gate would be forced to do this:
-     * Copy: Read the 8 bytes from /dev/shm and copy them into your JVM Heap Flyweight.
+     * Copy: Read the 8 bytes from /ingress/map/fx-risk-map and copy them into your JVM Heap Flyweight.
      * Mutate: Execute standard Java addition inside the JVM (heapFlyweight.setValue(current + trade)).
-     * Copy: Write the 8 bytes from the JVM Heap Flyweight back into the /dev/shm memory block.
+     * Copy: Write the 8 bytes from the JVM Heap Flyweight back into the /ingress/map/fx-risk-map memory block.
      * Moving data across the JVM boundary into the OS-level memory map takes precious CPU cycles.
      * Doing it twice per trade (Read -> Write) adds severe latency jitter.
      */
@@ -41,7 +41,7 @@ public class ConcurrentRiskLimitValidator {
             () -> Values.newNativeReference(LongValue.class));
 
     /**
-     * When a completely new instrument arrives, there is no existing data in /dev/shm to point a telescope at.
+     * When a completely new instrument arrives, there is no existing data in /ingress/map/fx-risk-map to point a telescope at.
      * The JVM must carry the initial trade exposure across the boundary into the newly allocated off-heap segment. That is why we use the Heap Flyweight (the Bucket) to carry those first 8 bytes across.
      * The Rule of Thumb for Zero-GC Memory Architecture:
      * To transport new data from the JVM into off-heap memory, use a reusable Heap Flyweight.
@@ -103,7 +103,7 @@ public class ConcurrentRiskLimitValidator {
                      * Because the Native Flyweight points directly to the raw, off-heap physical memory address,
                      * calling addAtomicValue() translates almost directly to a CPU-level Fetch-and-Add (XADD)
                      * or Compare-And-Swap (CAS) hardware instruction on that exact memory block. It modifies the memory in-place.
-                     * If you use a Heap Flyweight (the Bucket), you cannot use bytesStore() to point it at /dev/shm.
+                     * If you use a Heap Flyweight (the Bucket), you cannot use bytesStore() to point it at /ingress/map/fx-risk-map.
                      * You are forced to execute a completely different, much slower pipeline.
                      */
                     exposureLens.addAtomicValue(tradeSize);
@@ -123,7 +123,7 @@ public class ConcurrentRiskLimitValidator {
             LongValue insertionFlyweight = threadLocalInsertionValueFlyweight.get();
             insertionFlyweight.setValue(tradeSize);
             // 3. Chronicle allocates the off-heap space, reads the 8 bytes from our flyweight,
-            // and copies them into the new /dev/shm segment.
+            // and copies them into the new /ingress/map/fx-risk-map segment.
             // We do not need to aim the native lens here, because the value is already safely
             // written to off-heap memory by the insert() command.
             context.insert(Objects.requireNonNull(context.absentEntry()), context.wrapValueAsData(insertionFlyweight));
