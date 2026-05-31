@@ -24,11 +24,11 @@ public class PricingAndRiskEngine {
         riskMap = ChronicleMap.of(LongValue.class, LongValue.class)
                 .name("fx-risk-map")
                 .entries(10_000)
+                .averageKeySize(100_000)
                 .createPersistedTo(new File("ingress/map/fx-risk-map.dat"));
 
         try (ChronicleQueue ingressQueue = ChronicleQueue
                 .singleBuilder("ingress/queue")
-                .rollCycle(RollCycles.FAST_DAILY)
                 .build()) {
             ExcerptTailer tailer = ingressQueue.createTailer();
 

@@ -5,6 +5,7 @@ import net.openhft.chronicle.core.OS;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
 import java.io.IOException;
@@ -35,6 +36,9 @@ public class UdpToChronicleIngestion {
      * A DirectByteBuffer asks the OS to write the network packet directly
      * into a native memory address that Java can access, eliminating a costly memory copy
      * and keeping the garbage collector completely blind to the data.
+     * Over the Internet: Keep your payload to 1,472 bytes (or less).
+     * This fits perfectly inside a standard Ethernet MTU of 1,500 bytes
+     *  minus 28 bytes for IP and UDP headers (\(1500 - 28 = 1472\)).
      */
     public static final ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
 
