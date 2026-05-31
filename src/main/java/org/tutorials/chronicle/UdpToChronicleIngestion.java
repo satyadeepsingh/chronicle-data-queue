@@ -103,6 +103,9 @@ public class UdpToChronicleIngestion {
         try(DocumentContext dc = appender.writingDocument()) {
             Bytes<?> queueBytes = Objects.requireNonNull(dc.wire()).bytes();
 
+            // PREPEND THE LENGTH OF THE PACKET BEFORE WRITING THE ACTUAL DATA
+            queueBytes.writeInt(packetLength);
+
             // 1. GET SOURCE POINTER (Agrona)
             // Get the physical RAM address of our network buffer
             // get the raw C-style memory pointer (Address 0x1000) so we can pass it directly to Chronicle's native copy method.
@@ -126,7 +129,6 @@ public class UdpToChronicleIngestion {
             // 5. APPEND METADATA
             // Now we can use standard Chronicle methods again to append our timestamp
             queueBytes.writeLong(System.nanoTime());
-
         }
     }
 }

@@ -85,6 +85,7 @@
                         --add-opens java.base/sun.nio.ch=ALL-UNNAMED
                         --enable-native-access=ALL-UNNAMED
                         --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+                        --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>

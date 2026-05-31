@@ -22,7 +22,7 @@ public class UdpToChronicleIngestionTest {
     public void testFxTradeDataIngestion() throws Exception {
         // We append a dynamic UUID to ensure uniqueness in case the persistent queue has old data.
         String uniqueId = java.util.UUID.randomUUID().toString();
-        String fxTradeMsg = "FX_TRADE|EURUSD|1.0550|1000000|" + uniqueId;
+        String fxTradeMsg = "EUR/USD|1.0550|1000000|" + uniqueId;
         byte[] payload = fxTradeMsg.getBytes(StandardCharsets.UTF_8);
 
         // 1. Start the UDP listener in a background thread
@@ -45,15 +45,7 @@ public class UdpToChronicleIngestionTest {
             channel.send(buffer, new InetSocketAddress("127.0.0.1", 9999));
         }
 
-        // We capture the time IMMEDIATELY after sending.
-        // The latency measured will be:
-        // (Time UDP listener got packet) -> (Time it wrote to Chronicle)
-        // NOT the artificial 1000ms Thread.sleep below!
-
         // Allow time for the packet to be received and written to the Chronicle Queue
-        // NOTE: The previous version captured readTimestamp AFTER this sleep! 
-        // 1000 milliseconds = 1,000,000 microseconds. 
-        // That is exactly where your ~1015126 microsecond delay came from.
         Thread.sleep(1);
 
         // 3. Read from the queue and verify the message exists
@@ -72,26 +64,25 @@ public class UdpToChronicleIngestionTest {
                     }
 
                     Bytes<?> bytes = Objects.requireNonNull(dc.wire()).bytes();
-                    long remaining = bytes.readRemaining();
+                    
+                    // READ THE LENGTH-PREFIX
+                    int packetLength = bytes.readInt();
+                    
+                    byte[] readBytes = new byte[packetLength];
+                    bytes.read(readBytes, 0, packetLength);
+                    char delimiter = (char) bytes.readByte();
 
-                    if (remaining >= payload.length + 8) { 
-                        int stringLen = (int) (remaining - 8);
-                        byte[] readBytes = new byte[stringLen];
-                        
-                        bytes.read(readBytes, 0, stringLen);
-                        long tempWrittenTimestamp = bytes.readLong();
-                        String readMsg = new String(readBytes, StandardCharsets.UTF_8);
+                    long tempWrittenTimestamp = bytes.readLong();
+                    String readMsg = new String(readBytes, StandardCharsets.UTF_8);
 
-                        // Only capture the timestamp if this is the EXACT message from THIS test run.
-                        if (fxTradeMsg.equals(readMsg)) {
-                            found = true;
-                            writtenTimestamp = tempWrittenTimestamp;
-                            
-                            // We record readTimestamp here. However, because of the Thread.sleep(1000) 
-                            // above, this read time includes that full artificial second.
-                            readTimestamp = System.nanoTime();
-                            break;
-                        }
+                    System.out.println("Read message: " + readMsg);
+
+                    // Only capture the timestamp if this is the EXACT message from THIS test run.
+                    if (fxTradeMsg.equals(readMsg)) {
+                        found = true;
+                        writtenTimestamp = tempWrittenTimestamp;
+                        readTimestamp = System.nanoTime();
+                        break;
                     }
                 }
             }
@@ -105,12 +96,7 @@ public class UdpToChronicleIngestionTest {
         // Calculate total time between Chronicle queue ingestion and right now (the read)
         long deltaMicrosTotal = TimeUnit.NANOSECONDS.toMicros(readTimestamp - writtenTimestamp);
         
-        // Let's remove the artificial 1000ms Thread.sleep from the calculation so you see 
-        // the true Chronicle Queue retrieval latency.
-        long deltaMicrosAdjusted = deltaMicrosTotal - 1_000_000;
-        
         System.out.println("Elapsed time for Ingestion -> Read (Total micros): " + deltaMicrosTotal);
-        System.out.println("Elapsed time for Ingestion -> Read (Without Thread.sleep artificial delay): " + Math.max(0, deltaMicrosAdjusted));
         
         assertTrue(found, "The live FX trade message was not found in the Chronicle Queue");
         assertTrue(writtenTimestamp > 0, "The ingestion timestamp was not properly read");
