@@ -14,17 +14,7 @@ import java.util.Objects;
 
 public class ChronicleQueueReader {
 
-    public static ChronicleMap<LongValue, LongValue> riskMap;
-    private static final LongValue searchKeyFlyweight = Values.newNativeReference(LongValue.class);
-    private static final LongValue exposureFlyweight = Values.newNativeReference(LongValue.class);
-
     public static void main(String[] args) throws IOException {
-
-        riskMap = ChronicleMap.of(LongValue.class, LongValue.class)
-                .name("fx-risk-map")
-                .entries(10_000)
-                .averageKeySize(100_000)
-                .createPersistedTo(new File("ingress/map/fx-risk-map.dat"));
 
         try (ChronicleQueue ingressQueue = ChronicleQueue
                 .singleBuilder("ingress/queue")
@@ -54,20 +44,9 @@ public class ChronicleQueueReader {
 
                     // Next is the trade size
                     long tradeSize = bytes.parseLong();
-
-                    processTick(instrumentHash, tradeSize);
                 }
             }
         }
     }
 
-    private static void processTick(long instrumentHash, long tradeSize) {
-        searchKeyFlyweight.setValue(instrumentHash);
-        try (var context = riskMap.acquireContext(searchKeyFlyweight, exposureFlyweight)) {
-            long currentExposure = exposureFlyweight.getValue();
-            long newExposure = currentExposure + tradeSize;
-            exposureFlyweight.setValue(newExposure);
-            System.out.println("Updated exposure for " + instrumentHash + " to " + newExposure);
-        }
-    }
 }
