@@ -73,7 +73,7 @@ public class OrderBookMultiVenuePriceUpdatesAndBbo {
 
         long bestBid = 0, bestBidSize = 0, bestAsk = Long.MAX_VALUE, bestAskSize = 0;
 
-        int offset = instrumentId * MAX_VENUES;
+        int offset = instrumentId * MAX_INST;
         int limit  = offset + MAX_VENUES;
 
         for(int i = offset; i < limit; i++ ) {
@@ -117,7 +117,7 @@ public class OrderBookMultiVenuePriceUpdatesAndBbo {
 
     /**
      * STRATEGY THREAD (Reader)
-     * Optimistic Concurrency. Spins only if it collides with a write in progress.
+     * Optimistic Concurrency. Spins only if it collides with a write-in progress.
      * Uses a mutable flyweight object to ensure zero allocation on the read path.
      */
     public void getConsistentBbo(int instrumentId, BboSnapshot targetSnapshot) {
