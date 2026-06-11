@@ -124,7 +124,7 @@ public class OrderBookMultiVenuePriceUpdatesAndBbo {
 
         int seqIdx = instrumentId * CACHE_LINE_PADDINGS;
         long seq1, seq2=0;
-        long bp=0, bs=0, ap=0, as=0;
+        long bp=0, bs=0, ap=Long.MAX_VALUE, as=0;
 
         do {
             // 1. Read sequence(Acquire memory barrier ensures we see latest memory)

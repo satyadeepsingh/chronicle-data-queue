@@ -14,7 +14,7 @@ import java.util.Objects;
 
 public class ChronicleQueueReader {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         try (ChronicleQueue ingressQueue = ChronicleQueue
                 .singleBuilder("ingress/queue")
