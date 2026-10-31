@@ -251,7 +251,7 @@ public class MatchingEngineAndOrderAggregator {
 
 
     private int getPriceIndex(long price) {
-        return Math.toIntExact(((price - minPriceTarget) / tickSize));
+        return (int)((price - minPriceTarget) / tickSize);
     }
 
     private long getBestBidPrice(){

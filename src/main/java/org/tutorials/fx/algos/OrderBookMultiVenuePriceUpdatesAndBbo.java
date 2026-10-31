@@ -108,7 +108,7 @@ public class OrderBookMultiVenuePriceUpdatesAndBbo {
         bboBidSize[instrumentId] = bestBidSize;
         bboAskPrice[instrumentId] = bestAsk;
         bboAskSize[instrumentId] = bestAskSize;
-
+        VarHandle.storeStoreFence();
         // 2. Mark s Complete (EVEN)
         // setRelease acts as a StoreStore memory barrier. It guarantees all plain writes
         // above are flushed to main memory BEFORE this even sequence number becomes visible.
@@ -141,7 +141,7 @@ public class OrderBookMultiVenuePriceUpdatesAndBbo {
             bs = bboBidSize[instrumentId];
             ap = bboAskPrice[instrumentId];
             as = bboAskSize[instrumentId];
-
+            VarHandle.loadLoadFence();
             // 3. Read sequence again to verify atomicity
             // A secondary acquire fence prevents the data reads from floating below the sequence check
             seq2 = (long) SEQ_HANDLE.getAcquire(sequences, seqIdx);
